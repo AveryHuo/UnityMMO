@@ -99,14 +99,15 @@ function LoginController:StartLogin(login_info)
     self.login_info = login_info
     --向登录服务器请求连接,一连接上就等待收到其发过来的随机值了(challenge)
     self.login_state = LoginConst.Status.WaitForLoginServerChanllenge
+    --self.login_state = LoginConst.Status.WaitForGameServerConnect
 
 	NetMgr:SendConnect(self.login_info.account_ip, self.login_info.account_port, CS.XLuaFramework.NetPackageType.BaseLine)
 end
 
 function LoginController:OnReceiveLine(bytes) 
-    -- print('Cat:LoginController.lua[114] bytes', bytes)
+     print('Cat:LoginController.lua[114] bytes', bytes)
     local code = tostring(bytes)
-    -- print('Cat:LoginController.lua[145] code|'..code.."|login state:"..self.login_state)
+     print('Cat:LoginController.lua[145] code|'..code.."|login state:"..self.login_state)
     if self.login_state == LoginConst.Status.WaitForLoginServerChanllenge then
         self.challenge = crypt.base64decode(code)
         self.clientkey = crypt.randomkey()
@@ -160,13 +161,13 @@ function LoginController:OnReceiveLine(bytes)
 end
 
 function LoginController:Connect()
-	-- print('Cat:LoginController.lua[Connect] self.login_state : ', self.login_state)
+	 print('Cat:LoginController.lua[Connect] self.login_state : ', self.login_state)
 	if self.login_state == LoginConst.Status.WaitForGameServerConnect then
 		--刚连接上游戏服务器时需要进行一次握手校验
 		local handshake = string.format("%s@%s#%s:%d", crypt.base64encode(self.token.user), crypt.base64encode(self.token.server),crypt.base64encode(self.subid) , 1)
 		local hmac = crypt.hmac64(crypt.hashkey(handshake), self.secret)
 		local handshake_str = handshake .. ":" .. crypt.base64encode(hmac)
-		-- print('Cat:LoginController.lua[132] handshake_str', handshake_str)
+		 print('Cat:LoginController.lua[132] handshake_str', handshake_str)
         NetMgr:SendBytes(handshake_str)
         --接下来的处理就在OnReceiveMsg函数里
         self.login_state = LoginConst.Status.WaitForGameServerHandshake
